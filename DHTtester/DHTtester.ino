@@ -17,7 +17,7 @@ void loop() {
   // Wait a few seconds between measurements.
   delay(1000);
 
-  // Read temperature as Percentage
+  // Read humid as Percentage
   float h = dht.readHumidity();
   // Read temperature as Celsius (the default)
   float t = dht.readTemperature();
