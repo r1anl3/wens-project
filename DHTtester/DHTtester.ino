@@ -11,8 +11,6 @@ void setup() {
   Serial.println(F("DHTxx test!"));
   
   dht.begin();
-
-  rtc.adjust(DateTime(F(__DATE__),F(__TIME__)));
 }
 
 void loop() {
