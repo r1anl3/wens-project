@@ -1,13 +1,23 @@
+#define BLYNK_PRINT Serial
+/* Fill in information from Blynk Device Info here */
+#define BLYNK_TEMPLATE_ID "TMPL6rkayIYJV"
+#define BLYNK_TEMPLATE_NAME "Air Quality Monitoring"
+#define BLYNK_AUTH_TOKEN "-gsA9OPO1MxreftiMTCCwqpIDvTrdFwv"
+
 #include <NTPClient.h>
 #include <ESP8266WiFi.h>
 #include <WiFiUdp.h>
 #include "DHT.h"
+#include <BlynkSimpleEsp8266.h>
 
 #define DHTPIN 4 // SDA/D2
 #define DHTTYPE DHT11   // DHT 11
 
-const char *ssid     = "FixThatBug.vice_versa";
-const char *password = "nofreewifi";
+
+//const char *ssid     = "FixThatBug.vice_versa";
+//const char *password = "nofreewifi";
+const char *ssid     = "UIT Public";
+const char *password = "";
 
 WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "vn.pool.ntp.org", 25200, 60000); // ntpUDP, "VN", UTC7(in second), time update interval
@@ -15,11 +25,11 @@ char weekDay [7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", 
 String realTime, censor1;
 
 DHT dht(DHTPIN, DHTTYPE);
-char buf1[20];
+float h, t, hic;
 
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600); // 9600 baud
+
+void Initial() {
+  //Initial necessary components
 
   WiFi.begin(ssid, password);
 
@@ -27,46 +37,67 @@ void setup() {
     delay ( 500 );
     Serial.print ( "." );
   }
+  Serial.println("");
 
+  //Start components
   timeClient.begin();
   dht.begin();
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password);
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-  timeClient.update();
+void getData() {
+  // Get data from components
+  timeClient.update(); // Update time
+  Blynk.run();
 
   String day = String(weekDay[timeClient.getDay()]);
-  realTime = day + ' ' + timeClient.getFormattedTime() + '|';
+  realTime = day + ' ' + timeClient.getFormattedTime() + '|'; // Formated datetime
 
-  float h = dht.readHumidity(); // Read humit
+  // Read humid
+  h = dht.readHumidity(); 
   // Read temperature as Celsius (the default)
-  float t = dht.readTemperature();
-  // Read temperature as Fahrenheit (isFahrenheit = true)
-  float f = dht.readTemperature(true);
+  t = dht.readTemperature();
 
   // Check if any reads failed and exit early (to try again).
-  if (isnan(h) || isnan(t) || isnan(f)) {
+  if (isnan(h) || isnan(t)) {
     Serial.println(F("Failed to read from DHT sensor!"));
     return;
   }
 
-  // Compute heat index in Fahrenheit (the default)
-  float hif = dht.computeHeatIndex(f, h);
   // Compute heat index in Celsius (isFahreheit = false)
-  float hic = dht.computeHeatIndex(t, h, false);
+  hic = dht.computeHeatIndex(t, h, false);
+}
 
+void printData() {
   Serial.print(realTime);
   Serial.print(F("Humidity: "));
   Serial.print(h);
   Serial.print(F("%  Temperature: "));
   Serial.print(t);
   Serial.print(F("°C "));
-  // Serial.print(f);
   Serial.print(F("Heat index: "));
   Serial.print(hic);
-  Serial.println(F("°C "));
-  // Serial.print(hif);
-  // Serial.println(F("°F"));
+  Serial.print(F("°C "));
+  Serial.println("");
+}
+
+void sendData() {
+  //Send data to Blynk
+  Serial.println("Sent to Blynk!");
+}
+
+
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600); // 9600 baud
+
+  Initial();
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:  
+  getData();
+  sendData();
+  printData();
   delay(1000);
 }
