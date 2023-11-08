@@ -63,10 +63,10 @@ void getData() {
   }
 
   hic = dht.computeHeatIndex(temp, humid, false); // Compute heat index in Celsius (isFahreheit = false)
-  float rzero = mq135_sensor.getRZero();
+  // float rzero = mq135_sensor.getRZero();
   correctedRZero = mq135_sensor.getCorrectedRZero(temp, humid); // Calculate RZero value
   resistance = mq135_sensor.getResistance(); // Resistance
-  float ppm = mq135_sensor.getPPM();
+  // float ppm = mq135_sensor.getPPM();
   correctedPPM = mq135_sensor.getCorrectedPPM(temp, humid); // Calcualte PPM value
 }
 
@@ -95,7 +95,8 @@ void sendData() {
   // Serial.println("Sent to Blynk!");
   Blynk.virtualWrite(V0, temp); // Virtual pin 0, tempurature
   Blynk.virtualWrite(V1, humid); // Virtual pin 1, humid
-  Blynk.virtualWrite(V2, realTime);
+  Blynk.virtualWrite(V2, realTime); // Virual pin 2, datetime
+  Blynk.virtualWrite(V3, correctedPPM); // Virtual pin 3, ppm
 }
 
 void setup() {
@@ -105,7 +106,7 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:  
+  // put your main code here, to run repeatedly:
   getData();
   sendData();
   printData();
