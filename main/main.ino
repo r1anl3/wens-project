@@ -11,6 +11,7 @@
 #include <BlynkSimpleEsp8266.h>
 #include "MQ135.h"
 
+
 #define DHTPIN 4 // SDA/D2
 #define DHTTYPE DHT11   // DHT 11
 #define PIN_MQ135 A0 // MQ135
@@ -53,7 +54,7 @@ void getData() {
   Blynk.run();// Run Blynk
 
   String day = String(weekDay[timeClient.getDay()]);
-  realTime = day + ' ' + timeClient.getFormattedTime() + '|'; // Formated datetime
+  realTime = day + ' ' + timeClient.getFullFormattedTime() + '|'; // Formated datetime
   humid = dht.readHumidity(); // Read humid
   temp = dht.readTemperature(); // Read temperature as Celsius (the default)
 
@@ -91,7 +92,7 @@ void printData() {
 }
 
 void sendData() {
-  //Send data to Blynk
+  // Send data to Blynk
   // Serial.println("Sent to Blynk!");
   Blynk.virtualWrite(V0, temp); // Virtual pin 0, tempurature
   Blynk.virtualWrite(V1, humid); // Virtual pin 1, humid
