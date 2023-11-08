@@ -110,7 +110,7 @@ void sendData() {
   Blynk.virtualWrite(V1, humid); // Virtual pin 1, humid
   Blynk.virtualWrite(V2, realTime); // Virual pin 2, datetime
   Blynk.virtualWrite(V3, correctedPPM); // Virtual pin 3, ppm
-  Blynk.virtualWrite(V4, sensorError); // Virtual pin 3, ppm
+  Blynk.virtualWrite(V4, sensorError); // Virtual pin 4, error
 }
 
 void setup() {
