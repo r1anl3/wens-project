@@ -10,8 +10,8 @@
 
 // Your WiFi credentials.
 // Set password to "" for open networks.
-char ssid[] = "FixThatBug.vice_versa";
-char pass[] = "nofreewifi";
+char ssid[] = "";
+char pass[] = "";
 
 void setup()
 {
