@@ -5,8 +5,8 @@
 //#include <WiFi101.h> // for WiFi 101 shield or MKR1000
 #include <WiFiUdp.h>
 
-const char *ssid     = "FixThatBug.vice_versa";
-const char *password = "nofreewifi";
+const char *ssid     = "";
+const char *password = "";
 
 WiFiUDP ntpUDP;
 
