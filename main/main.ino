@@ -30,6 +30,7 @@ NTPClient timeClient(ntpUDP, "vn.pool.ntp.org", 25200, 60000); // ntpUDP, "VN", 
 char weekDay [7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}; // Weekday format
 String realTime; // Time format
 String sensorError;
+String location;
 
 void Initial() {
   //Initial necessary components
@@ -49,6 +50,13 @@ void Initial() {
   timer.setInterval(1000L, sendData); // Delay time for sending information to Blynk server
 }
 
+String getLocation() {
+  String curr;
+  // Your code here to get location
+
+  return curr;
+}
+
 void getData() {
   // Get data from components
   sensorError = "None";
@@ -56,13 +64,14 @@ void getData() {
   timeClient.update(); // Update time
   Blynk.run();// Run Blynk
 
-  realTime = String(weekDay[timeClient.getDay()]) + ' ' + timeClient.getFullFormattedTime() + '|'; // Formated datetime
   humid = dht.readHumidity(); // Read humid
   temp = dht.readTemperature(); // Read temperature as Celsius (the default)
   correctedRZero = mq135_sensor.getCorrectedRZero(temp, humid); // Calculate RZero value
   correctedPPM = mq135_sensor.getCorrectedPPM(temp, humid); // Calcualte PPM value
   resistance = mq135_sensor.getResistance(); // Resistance
   hic = dht.computeHeatIndex(temp, humid, false); // Compute heat index in Celsius (isFahreheit = false)
+  location = getLocation();
+  realTime = String(weekDay[timeClient.getDay()]) + ' ' + timeClient.getFullFormattedTime() + '|' + location + '|'; // Formated datetime
   // float rzero = mq135_sensor.getRZero();
   // float ppm = mq135_sensor.getPPM();
 
@@ -103,7 +112,7 @@ void printData() {
   Serial.println("");
 }
 
-void sendData() {
+void sendDataToBlynk() {
   // Send data to Blynk
   // Serial.println("Sent to Blynk!");
   Blynk.virtualWrite(V0, temp); // Virtual pin 0, tempurature
@@ -111,6 +120,10 @@ void sendData() {
   Blynk.virtualWrite(V2, realTime); // Virual pin 2, datetime
   Blynk.virtualWrite(V3, correctedPPM); // Virtual pin 3, ppm
   Blynk.virtualWrite(V4, sensorError); // Virtual pin 4, error
+}
+
+void sendDataToGGSheet() {
+  // Send data to google sheet
 }
 
 void setup() {
@@ -122,7 +135,8 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   getData();
-  sendData();
+  sendDataToBlynk();
+  sendDataToGGSheet();
   printData();
   delay(1000);
 }
