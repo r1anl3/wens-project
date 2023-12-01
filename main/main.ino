@@ -10,6 +10,8 @@
 #include "DHT.h"
 #include <BlynkSimpleEsp8266.h>
 #include "MQ135.h"
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
 
 
 #define DHTPIN 4 // SDA/D2
@@ -21,19 +23,25 @@ WiFiUDP ntpUDP;
 DHT dht(DHTPIN, DHTTYPE);
 MQ135 mq135_sensor = MQ135(PIN_MQ135);
 float humid, temp, hic; // Values from DHT11
-float correctedRZero, resistance, correctedPPM; // Values from MQ135 
+float correctedRZero, resistance, correctedPPM, rzero, ppm; // Values from MQ135 
 const char *ssid     = "FixThatBug.vice_versa"; // Wifi name
-const char *password = "nofreewifi";// Wifi password
-// const char *ssid     = "UIT Public";
-// const char *password = "";
+const char *password = "nofreewifii";// Wifi password
+const char* serverName = "http://192.168.85.6/post-esp-data.php";
+String sensorLocation = "Home";
+String apiKeyValue = "tPmAT5Ab3j7F9";
+String sensorName = "DHT11 MQ135";
+
 NTPClient timeClient(ntpUDP, "vn.pool.ntp.org", 25200, 60000); // ntpUDP, "VN", UTC7(in second), time update interval
 char weekDay [7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}; // Weekday format
 String realTime; // Time format
 String sensorError;
 String location;
+long delayTime = 1000;
+long lastPost;
 
-void Initial() {
-  //Initial necessary components
+void setup() {
+  // put your setup code here, to run once:
+  Serial.begin(9600); // 9600 baud
   WiFi.begin(ssid, password); // Connect to wifi
 
   while ( WiFi.status() != WL_CONNECTED ) { // Waiting for wifi connection
@@ -47,7 +55,20 @@ void Initial() {
   dht.begin();// DHT11 start
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password); // Connect Blynk server
 
-  timer.setInterval(1000L, sendData); // Delay time for sending information to Blynk server
+  timer.setInterval(delayTime, sendDataToBlynk); // Delay time for sending information to Blynk server
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  long currTime = millis();
+  getData();
+  sendDataToBlynk();
+  printData();
+  if (currTime - lastPost > 30000) {
+    sendDataToLAMP();
+    lastPost = currTime;
+  }
+  delay(delayTime);
 }
 
 String getLocation() {
@@ -72,8 +93,8 @@ void getData() {
   hic = dht.computeHeatIndex(temp, humid, false); // Compute heat index in Celsius (isFahreheit = false)
   location = getLocation();
   realTime = String(weekDay[timeClient.getDay()]) + ' ' + timeClient.getFullFormattedTime() + '|' + location + '|'; // Formated datetime
-  // float rzero = mq135_sensor.getRZero();
-  // float ppm = mq135_sensor.getPPM();
+  rzero = mq135_sensor.getRZero();
+  ppm = mq135_sensor.getPPM();
 
   if (isnan(humid) || isnan(temp)) { // Check if any reads failed and exit early (to try again).
     humid = 0;
@@ -89,7 +110,6 @@ void getData() {
     Serial.println(sensorError);
     return;
   }
-
 }
 
 void printData() {
@@ -109,12 +129,10 @@ void printData() {
   Serial.print(" Corrected PPM: ");
   Serial.print(correctedPPM);
   Serial.println("ppm");
-  Serial.println("");
 }
 
 void sendDataToBlynk() {
   // Send data to Blynk
-  // Serial.println("Sent to Blynk!");
   Blynk.virtualWrite(V0, temp); // Virtual pin 0, tempurature
   Blynk.virtualWrite(V1, humid); // Virtual pin 1, humid
   Blynk.virtualWrite(V2, realTime); // Virual pin 2, datetime
@@ -122,21 +140,43 @@ void sendDataToBlynk() {
   Blynk.virtualWrite(V4, sensorError); // Virtual pin 4, error
 }
 
-void sendDataToGGSheet() {
-  // Send data to google sheet
-}
-
-void setup() {
-  // put your setup code here, to run once:
-  Serial.begin(9600); // 9600 baud
-  Initial();
-}
-
-void loop() {
-  // put your main code here, to run repeatedly:
-  getData();
-  sendDataToBlynk();
-  sendDataToGGSheet();
-  printData();
-  delay(1000);
+void sendDataToLAMP() {
+  // Send data to LAMP
+    if(WiFi.status()== WL_CONNECTED){
+    HTTPClient http;
+    WiFiClient client;
+    
+    // Your Domain name with URL path or IP address with path
+    http.begin(client, serverName);
+    
+    // Specify content-type header
+    http.addHeader("Content-Type", "application/x-www-form-urlencoded");
+    
+    // Prepare your HTTP POST request data
+    String httpRequestData = "api_key=" + apiKeyValue + "&sensor=" + sensorName
+                          + "&location=" + sensorLocation + "&value1=" + String(temp)
+                          + "&value2=" + String(humid) + "&value3=" + String(correctedPPM) + "";
+    Serial.println("");
+    Serial.print("httpRequestData: ");
+    Serial.println(httpRequestData);
+    
+    // Send HTTP POST request
+    int httpResponseCode = http.POST(httpRequestData);
+        
+    if (httpResponseCode>0) {
+      Serial.print("HTTP Response code: ");
+      Serial.println(httpResponseCode);
+    }
+    else {
+      Serial.print("Error code: ");
+      Serial.println(httpResponseCode);
+    }
+    // Free resources
+    http.end();
+  }
+  else {
+    Serial.println("WiFi Disconnected");
+  }
+  Serial.println("");
+  //Send an HTTP POST request every 30 seconds
 }
