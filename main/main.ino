@@ -25,11 +25,12 @@ MQ135 mq135_sensor = MQ135(PIN_MQ135);
 float humid, temp, hic; // Values from DHT11
 float correctedRZero, resistance, correctedPPM, rzero, ppm; // Values from MQ135 
 const char *ssid     = "FixThatBug.vice_versa"; // Wifi name
-const char *password = "nofreewifii";// Wifi password
-const char* serverName = "http://192.168.85.6/post-esp-data.php";
-String sensorLocation = "Home";
+const char *password = "getoutofhere";// Wifi password
+const char* serverName = "http://13.250.117.82/post-esp-data.php";
+// const char* serverName = "http://192.168.215.6/post-esp-data.php";
+String sensorLocation = "Station_01";
 String apiKeyValue = "tPmAT5Ab3j7F9";
-String sensorName = "DHT11 MQ135";
+String sensorName = "DHT11-MQ135";
 
 NTPClient timeClient(ntpUDP, "vn.pool.ntp.org", 25200, 60000); // ntpUDP, "VN", UTC7(in second), time update interval
 char weekDay [7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"}; // Weekday format
@@ -38,6 +39,7 @@ String sensorError;
 String location;
 long delayTime = 1000;
 long lastPost;
+int httpResponseCode;
 
 void setup() {
   // put your setup code here, to run once:
@@ -138,6 +140,16 @@ void sendDataToBlynk() {
   Blynk.virtualWrite(V2, realTime); // Virual pin 2, datetime
   Blynk.virtualWrite(V3, correctedPPM); // Virtual pin 3, ppm
   Blynk.virtualWrite(V4, sensorError); // Virtual pin 4, error
+
+  if (temp > 34 || humid < 80) {
+    Blynk.logEvent("dry", "Get yourself some water!");
+  }
+  if (correctedPPM > 40) {
+    Blynk.logEvent("polution", "Please wearing mash outside!");
+  }
+  if (httpResponseCode != 200) {
+    Blynk.logEvent("post", "No response from LAMP server!");
+  }
 }
 
 void sendDataToLAMP() {
@@ -161,7 +173,7 @@ void sendDataToLAMP() {
     Serial.println(httpRequestData);
     
     // Send HTTP POST request
-    int httpResponseCode = http.POST(httpRequestData);
+    httpResponseCode = http.POST(httpRequestData);
         
     if (httpResponseCode>0) {
       Serial.print("HTTP Response code: ");
