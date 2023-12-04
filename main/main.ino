@@ -26,7 +26,7 @@ float humid, temp, hic; // Values from DHT11
 float correctedRZero, resistance, correctedPPM, rzero, ppm; // Values from MQ135 
 const char *ssid     = "FixThatBug.vice_versa"; // Wifi name
 const char *password = "getoutofhere";// Wifi password
-const char* serverName = "http://13.250.117.82/post-esp-data.php";
+const char* serverName = "http://122.248.192.235/post-esp-data.php";
 // const char* serverName = "http://192.168.215.6/post-esp-data.php";
 String sensorLocation = "Station_01";
 String apiKeyValue = "tPmAT5Ab3j7F9";
