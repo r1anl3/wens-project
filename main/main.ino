@@ -139,16 +139,20 @@ void sendDataToBlynk() {
   Blynk.virtualWrite(V1, humid); // Virtual pin 1, humid
   Blynk.virtualWrite(V2, realTime); // Virual pin 2, datetime
   Blynk.virtualWrite(V3, correctedPPM); // Virtual pin 3, ppm
-  Blynk.virtualWrite(V4, sensorError); // Virtual pin 4, error
+  if (sensorError == "None") {
+    Blynk.virtualWrite(V4, httpResponseCode);   
+  } else {
+    Blynk.virtualWrite(V4, sensorError); // Virtual pin 4, status
+  }
 
   if (temp > 34 || humid < 80) {
     Blynk.logEvent("dry", "Get yourself some water!");
   }
-  if (correctedPPM > 40) {
+  if (correctedPPM > 42) {
     Blynk.logEvent("polution", "Please wearing mash outside!");
   }
   if (httpResponseCode != 200) {
-    Blynk.logEvent("post", "No response from LAMP server!");
+    Blynk.logEvent("post", "Code: " + httpResponseCode);
   }
 }
 
