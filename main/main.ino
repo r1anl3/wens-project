@@ -24,9 +24,10 @@ DHT dht(DHTPIN, DHTTYPE);
 MQ135 mq135_sensor = MQ135(PIN_MQ135);
 float humid, temp, hic; // Values from DHT11
 float correctedRZero, resistance, correctedPPM, rzero, ppm; // Values from MQ135 
-const char *ssid     = "FixThatBug.vice_versa"; // Wifi name
-const char *password = "Nowifineed";// Wifi password
-const char* serverName = "http://122.248.192.235/post-esp-data.php";
+const char *ssid     = "YOUR_SSID"; // Wifi name
+const char *password = "YOUR_PASSWORD";// Wifi password
+
+const char* serverName = "YOUR_SERVER";
 String sensorLocation = "Station_01";
 String apiKeyValue = "tPmAT5Ab3j7F9";
 String sensorName = "DHT11-MQ135";
@@ -52,7 +53,7 @@ void setup() {
   Serial.println("");
 
   //Start components
-  timeClient.begin(); // NTPTimeClient start
+  timeClient.begin(); // NTPTimeClient start (1 cái server thời gian)
   dht.begin();// DHT11 start
   Blynk.begin(BLYNK_AUTH_TOKEN, ssid, password); // Connect Blynk server
 
@@ -62,13 +63,13 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
   long currTime = millis();
-  getData();
-  sendDataToBlynk();
-  printData();
+  getData(); // lấy dữ liệu từ sensor
+  sendDataToBlynk(); // gửi lên blynk
+  printData(); // in dữ liệu ra serial
   if (currTime - lastPost > 30000) {
     sendDataToLAMP();
     lastPost = currTime;
-  }
+  } // mỗi 30s post lên server 1 lần
   delay(delayTime);
 }
 
@@ -145,7 +146,7 @@ void sendDataToBlynk() {
   }
 
   if (temp > 34 || humid < 80) {
-    Blynk.logEvent("dry", "Get yourself some water!");
+    Blynk.logEvent("dry", "Get yourself some water!"); // tên sự kiện, thông tin
   }
   if (correctedPPM > 42) {
     Blynk.logEvent("polution", "Please wearing mash outside!");
@@ -184,7 +185,7 @@ void sendDataToLAMP() {
     }
     else {
       Serial.print("Error code: ");
-      Serial.println(httpResponseCode);
+      Serial.println(httpResponseCode); // -1
     }
     // Free resources
     http.end();
